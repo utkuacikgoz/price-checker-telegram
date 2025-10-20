@@ -3,6 +3,8 @@ import re
 from telegram import Bot
 import datetime
 
+import os 
+
 BOT_TOKEN = "YOUR_BOT_TOKEN"
 CHAT_ID = "YOUR_CHAT_ID"
 
