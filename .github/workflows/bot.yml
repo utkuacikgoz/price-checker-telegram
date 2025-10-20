@@ -10,11 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - run: pip install -r requirements.txt
-      - run: python bilira_bot.py
+
+      - name: Check BOT_TOKEN and CHAT_ID
+        run: |
+          if [ -z "$BOT_TOKEN" ]; then
+            echo "❌ ERROR: BOT_TOKEN is empty. Set repository secret BOT_TOKEN."
+            exit 1
+          fi
+          if [ -z "$CHAT_ID" ]; then
+            echo "❌ ERROR: CHAT_ID is empty. Set repository secret CHAT_ID."
+            exit 1
+          fi
+          echo "✅ Secrets found. Continuing..."
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+
+      - name: Run Bilira Bot
+        run: python bilira_bot.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
