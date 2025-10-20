@@ -1,50 +1,49 @@
 import os
-import re
-import sys
-import logging
+import asyncio
 from telegram import Bot
 from telegram.error import TelegramError
+from pyppeteer import launch
 
-# === Validate Environment Variables ===
+# === Config ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
+URL = "https://kripto.bilira.co/market/BMMF_TRYB"
 
-if not BOT_TOKEN:
-    print("❌ ERROR: BOT_TOKEN environment variable is not set.")
-    sys.exit(1)
+async def take_screenshot(url, filename="screenshot.png"):
+    """Launch a headless browser, capture a screenshot, and return filename."""
+    browser = await launch(
+        headless=True,
+        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    )
+    page = await browser.newPage()
+    await page.setViewport({"width": 1366, "height": 768})
+    print(f"📸 Loading {url} ...")
+    await page.goto(url, {"waitUntil": "networkidle2", "timeout": 60000})
+    await page.screenshot({"path": filename, "fullPage": True})
+    await browser.close()
+    print("✅ Screenshot captured.")
+    return filename
 
-if not re.match(r'^\d+:[A-Za-z0-9_-]{20,}$', BOT_TOKEN):
-    print("❌ ERROR: BOT_TOKEN does not match expected format. Check your secret value in GitHub → Settings → Secrets → Actions.")
-    sys.exit(1)
+async def main():
+    if not BOT_TOKEN or not CHAT_ID:
+        print("❌ Missing BOT_TOKEN or CHAT_ID environment variable.")
+        return
 
-if not CHAT_ID:
-    print("❌ ERROR: CHAT_ID environment variable is not set.")
-    sys.exit(1)
+    bot = Bot(BOT_TOKEN)
 
-# === Initialize Logging ===
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-# === Initialize Bot ===
-try:
-    bot = Bot(token=BOT_TOKEN)
-    logging.info("✅ Telegram Bot initialized successfully.")
-except TelegramError as e:
-    logging.error(f"❌ Failed to initialize Telegram Bot: {e}")
-    sys.exit(1)
-
-# === Example Bot Logic ===
-def main():
     try:
-        # Example message — replace this with your actual logic
-        bot.send_message(chat_id=CHAT_ID, text="✅ Bilira Bot is running successfully!")
-        logging.info("Message sent successfully.")
+        filename = await take_screenshot(URL)
+        with open(filename, "rb") as f:
+            await bot.send_photo(
+                chat_id=CHAT_ID,
+                photo=f,
+                caption=f"📊 Bilira Market Snapshot\n{URL}"
+            )
+        print("✅ Screenshot sent successfully to Telegram.")
     except TelegramError as e:
-        logging.error(f"❌ Telegram error while sending message: {e}")
-        sys.exit(1)
+        print(f"❌ Telegram error: {e}")
     except Exception as e:
-        logging.error(f"❌ Unexpected error: {e}")
-        sys.exit(1)
+        print(f"❌ Unexpected error: {e}")
 
 if __name__ == "__main__":
-    main()
-print(f"BOT_TOKEN length: {len(BOT_TOKEN)}")
+    asyncio.get_event_loop().run_until_complete(main())
