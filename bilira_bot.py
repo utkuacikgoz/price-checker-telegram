@@ -47,3 +47,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+print(f"BOT_TOKEN length: {len(BOT_TOKEN)}")
