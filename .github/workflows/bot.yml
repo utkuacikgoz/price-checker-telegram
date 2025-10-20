@@ -8,6 +8,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -15,19 +16,21 @@ jobs:
         with:
           python-version: "3.11"
 
-      - run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install python-telegram-bot==13.15 pyppeteer
 
-      - name: Check BOT_TOKEN and CHAT_ID
+      - name: Check secrets
         run: |
           if [ -z "$BOT_TOKEN" ]; then
-            echo "❌ ERROR: BOT_TOKEN is empty. Set repository secret BOT_TOKEN."
+            echo "❌ BOT_TOKEN is empty."
             exit 1
           fi
           if [ -z "$CHAT_ID" ]; then
-            echo "❌ ERROR: CHAT_ID is empty. Set repository secret CHAT_ID."
+            echo "❌ CHAT_ID is empty."
             exit 1
           fi
-          echo "✅ Secrets found. Continuing..."
+          echo "✅ Secrets OK."
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
