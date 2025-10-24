@@ -2,7 +2,7 @@ name: Bilira Bot
 
 on:
   schedule:
-    - cron: "0 * * * *"  # every hour
+    - cron: "0 0 * * *"  # every midnight
   workflow_dispatch:
 
 jobs:
